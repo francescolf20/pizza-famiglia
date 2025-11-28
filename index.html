@@ -7,45 +7,41 @@
     <title>Pizzeria La Face</title>
 
     <style>
+        * { box-sizing: border-box; }
+
         body {
-            font-family: Arial;
+            font-family: Arial, sans-serif;
             max-width: 600px;
             margin: 20px auto;
+            padding: 10px;
         }
 
-        input,
-        textarea {
+        input, textarea {
             width: 100%;
             padding: 10px;
             margin: 8px 0;
-            border: 1px solid #ccc;
             border-radius: 5px;
+            border: 1px solid #ccc;
         }
 
         button {
-            padding: 10px 15px;
-            border: none;
-            border-radius: 5px;
-            color: white;
+            padding: 9px 14px;
+            font-size: 14px;
             cursor: pointer;
+            border-radius: 5px;
+            border: none;
+            color: white;
+            margin-right: 5px;
         }
 
-        .btn-add {
-            background: #4CAF50;
-        }
-
-        .btn-edit {
-            background: #2196F3;
-        }
-
-        .btn-delete {
-            background: #F44336;
-        }
+        .btn-send { background: #4CAF50; }
+        .btn-edit { background: #2196F3; }
+        .btn-delete { background: #F44336; }
 
         .entry {
             border: 1px solid #ddd;
-            padding: 10px;
-            margin-top: 10px;
+            padding: 12px;
+            margin-top: 12px;
             border-radius: 6px;
             background: #f9f9f9;
         }
@@ -53,6 +49,7 @@
 </head>
 
 <body>
+
     <h2>Pizzeria La Face</h2>
     <p>Inserisci il tuo nome e i gusti di pizza preferiti:</p>
 
@@ -63,129 +60,127 @@
         <label>Gusti di pizza:</label>
         <textarea id="pizzas" rows="3" required></textarea>
 
-        <button type="submit" class="btn-add">Invia</button>
+        <button type="submit" class="btn-send">Invia</button>
     </form>
 
     <h3>Preferenze di tutta la famiglia</h3>
     <div id="results">Caricamento...</div>
 
     <script>
-        const API_URL = "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
+        // URL del WebApp GOOGLE APPS SCRIPT
+        const API_URL =
+            "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
 
+        // Escape stringhe per evitare errori HTML
         function esc(str) {
-            return str.replace(/&/g, "&amp;")
-                .replace(/</g, "&lt;")
-                .replace(/>/g, "&gt;")
-                .replace(/"/g, "&quot;");
+            return String(str)
+                .replace(/\\/g, "\\\\")
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '\\"');
         }
 
-        // INVIA
+        //------------------------------
+        // 🎯 AGGIUNGI UNA RIGA
+        //------------------------------
         document.getElementById("pizzaForm").addEventListener("submit", function (e) {
             e.preventDefault();
 
             const data = {
                 action: "add",
-                name: document.getElementById("name").value,
-                pizzas: document.getElementById("pizzas").value
+                name: document.getElementById("name").value.trim(),
+                pizzas: document.getElementById("pizzas").value.trim()
             };
 
+            if (!data.name || !data.pizzas) return;
+
             fetch(API_URL, {
                 method: "POST",
-                mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(data)
+            })
+            .then(() => {
+                document.getElementById("pizzaForm").reset();
+                setTimeout(loadEntries, 300);
             });
-
-            alert("Preferenza salvata!");
-            setTimeout(loadEntries, 700);
         });
 
-        // ELIMINA
+
+        //------------------------------
+        // ❌ ELIMINA RIGA
+        //------------------------------
         function deleteEntry(id) {
-            if (!confirm("Eliminare?")) return;
+            if (!confirm("Eliminare questa voce?")) return;
 
             fetch(API_URL, {
                 method: "POST",
-                mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ action: "delete", id: id })
-            });
-
-            setTimeout(loadEntries, 700);
+            })
+            .then(() => setTimeout(loadEntries, 300));
         }
 
-        // MODIFICA
-        function editEntry(id, name, pizzas) {
-            const newName = prompt("Nuovo nome:", name);
-            if (newName === null) return;
 
-            const newPizzas = prompt("Nuovi gusti:", pizzas);
-            if (newPizzas === null) return;
+        //------------------------------
+        // ✏️ MODIFICA RIGA
+        //------------------------------
+        function editEntry(id, oldName, oldPizzas) {
+            const newName = prompt("Nuovo nome:", oldName);
+            if (!newName) return;
+
+            const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
+            if (!newPizzas) return;
 
             fetch(API_URL, {
                 method: "POST",
-                mode: "no-cors",
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({
                     action: "update",
                     id: id,
-                    name: newName,
-                    pizzas: newPizzas
+                    name: newName.trim(),
+                    pizzas: newPizzas.trim()
                 })
-            });
-
-            setTimeout(loadEntries, 700);
+            })
+            .then(() => setTimeout(loadEntries, 300));
         }
 
-        // CARICA
+
+        //------------------------------
+        // 📜 CARICA TUTTE LE RIGHE
+        //------------------------------
         function loadEntries() {
-    fetch(API_URL)
-        .then(res => res.json())
-        .then(data => {
-            const container = document.getElementById("results");
-            container.innerHTML = "";
+            fetch(API_URL)
+                .then(res => res.json())
+                .then(data => {
+                    let html = "";
 
-            data.forEach(row => {
-                const [name, pizzas, id] = row;
+                    data.forEach(row => {
+                        html += `
+                            <div class="entry">
+                                <strong>${esc(row[0])}</strong><br>
+                                ${esc(row[1])}<br><br>
 
-                const div = document.createElement("div");
-                div.className = "entry";
+                                <button class="btn-edit"
+                                        onclick="editEntry(${row[2]}, '${esc(row[0])}', '${esc(row[1])}')">
+                                    Modifica
+                                </button>
 
-                div.innerHTML = `
-                    <strong>${esc(name)}</strong><br>
-                    ${esc(pizzas)}
-                    <br><br>
-                `;
+                                <button class="btn-delete"
+                                        onclick="deleteEntry(${row[2]})">
+                                    Elimina
+                                </button>
+                            </div>
+                        `;
+                    });
 
-                // Bottone modifica
-                const editBtn = document.createElement("button");
-                editBtn.className = "btn-edit";
-                editBtn.textContent = "Modifica";
-                editBtn.onclick = () => editEntry(id, name, pizzas);
-
-                // Bottone elimina
-                const deleteBtn = document.createElement("button");
-                deleteBtn.className = "btn-delete";
-                deleteBtn.textContent = "Elimina";
-                deleteBtn.onclick = () => deleteEntry(id);
-
-                // Aggiunge i pulsanti al blocco
-                div.appendChild(editBtn);
-                div.appendChild(deleteBtn);
-
-                // Aggiunge la scheda alla pagina
-                container.appendChild(div);
-            });
-        })
-        .catch(() => {
-            document.getElementById("results").innerHTML = "Errore nel caricamento.";
-        });
-}
-
+                    document.getElementById("results").innerHTML = html;
+                })
+                .catch(err => {
+                    document.getElementById("results").innerHTML = "Errore caricamento.";
+                });
+        }
 
         loadEntries();
     </script>
 
 </body>
-
 </html>
