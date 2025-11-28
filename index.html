@@ -60,7 +60,7 @@
 <div id="results">Caricamento...</div>
 
 <script>
-    // ⚠️ IMPORTANTE: Sostituisci questo URL con il tuo, dopo aver ripubblicato lo script.
+    // ⚠️ RICORDA DI SOSTITUIRE QUESTO URL con l'URL del tuo script Apps Script dopo averlo distribuito
     const API_URL = "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
 
     function esc(str) {
@@ -70,7 +70,7 @@
             .replace(/"/g, '\\"');
     }
 
-    // 📌 INVIO DATI — FORMATO COMPATIBILE CON APPS SCRIPT
+    // 📌 INVIO DATI (AGGIUNGI)
     document.getElementById("pizzaForm").addEventListener("submit", function (e) {
         e.preventDefault();
 
@@ -79,7 +79,7 @@
         formData.append("name", document.getElementById("name").value.trim());
         formData.append("pizzas", document.getElementById("pizzas").value.trim());
 
-        // CORREZIONE: Rimosso mode: "no-cors"
+        // CORRETTO: Rimosso mode: "no-cors"
         fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -100,7 +100,7 @@
         formData.append("action", "delete");
         formData.append("id", id);
 
-        // CORREZIONE: Rimosso mode: "no-cors"
+        // CORRETTO: Rimosso mode: "no-cors"
         fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -124,7 +124,7 @@
         formData.append("name", newName.trim());
         formData.append("pizzas", newPizzas.trim());
 
-        // CORREZIONE: Rimosso mode: "no-cors"
+        // CORRETTO: Rimosso mode: "no-cors"
         fetch(API_URL, {
             method: "POST",
             headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -141,7 +141,6 @@
             .then(data => {
                 let html = "";
                 data.forEach(row => {
-                    // row[0] = Nome, row[1] = Pizze, row[2] = ID riga
                     html += `
                         <div class="entry">
                             <strong>${esc(row[0])}</strong><br>
