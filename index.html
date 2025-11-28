@@ -1,101 +1,111 @@
 <!DOCTYPE html>
 <html lang="it">
-  <head>
-    <base target="_top">
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Preferenze Pizza Famiglia</title>
-    <style>
-      body {
-        font-family: Arial, sans-serif;
-        max-width: 600px;
-        margin: 20px auto;
-        padding: 10px;
-      }
-      input, textarea {
-        width: 100%;
-        padding: 10px;
-        margin: 8px 0;
-        border-radius: 5px;
-        border: 1px solid #ccc;
-      }
-      button {
-        padding: 10px 15px;
-        font-size: 16px;
-        cursor: pointer;
-        border-radius: 5px;
-        background-color: #4CAF50;
-        color: white;
-        border: none;
-      }
-      .entry {
-        border: 1px solid #ddd;
-        padding: 10px;
-        margin-top: 10px;
-        border-radius: 6px;
-        background: #f9f9f9;
-      }
-    </style>
-  </head>
-  <body>
-    <h2>Preferenze Pizza della Famiglia</h2>
-    <p>Inserisci il tuo nome e i gusti di pizza preferiti:</p>
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Preferenze Pizza Famiglia</title>
 
-    <form id="pizzaForm">
-      <label>Nome:</label>
-      <input type="text" id="name" required />
+<style>
+  body {
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 10px;
+  }
+  input, textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 8px 0;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+  }
+  button {
+    padding: 10px 15px;
+    font-size: 16px;
+    cursor: pointer;
+    border-radius: 5px;
+    background-color: #4CAF50;
+    color: white;
+    border: none;
+  }
+  .entry {
+    border: 1px solid #ddd;
+    padding: 10px;
+    margin-top: 10px;
+    border-radius: 6px;
+    background: #f9f9f9;
+  }
+</style>
+</head>
 
-      <label>Gusti di pizza:</label>
-      <textarea id="pizzas" rows="3" required></textarea>
+<body>
+<h2>Preferenze Pizza della Famiglia</h2>
+<p>Inserisci il tuo nome e i gusti di pizza preferiti:</p>
 
-      <button type="submit">Invia</button>
-    </form>
+<form id="pizzaForm">
+  <label>Nome:</label>
+  <input type="text" id="name" required>
 
-    <h3>Preferenze di tutta la famiglia</h3>
-    <div id="results">Caricamento...</div>
+  <label>Gusti di pizza:</label>
+  <textarea id="pizzas" rows="3" required></textarea>
 
-    <script>
-      const form = document.getElementById('pizzaForm');
-      const resultsDiv = document.getElementById('results');
+  <button type="submit">Invia</button>
+</form>
 
-      form.addEventListener('submit', function(e) {
-        e.preventDefault();
-        const name = document.getElementById('name').value.trim();
-        const pizzas = document.getElementById('pizzas').value.trim();
-        if (!name || !pizzas) return;
+<h3>Preferenze di tutta la famiglia</h3>
+<div id="results">Caricamento...</div>
 
-        const data = { name, pizzas };
+<script>
+// URL del tuo WebApp
+const API_URL = "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
 
-        google.script.run
-          .withSuccessHandler(function() {
-            form.reset();
-            loadEntries();
-          })
-          .addEntry(data);
+// INVIO DATI
+document.getElementById("pizzaForm").addEventListener("submit", function(e) {
+  e.preventDefault();
+
+  const data = {
+    name: document.getElementById("name").value,
+    pizzas: document.getElementById("pizzas").value
+  };
+
+  fetch(API_URL, {
+    method: "POST",
+    mode: "no-cors",  // necessario con Apps Script
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  alert("Preferenza salvata!");
+  
+  // ricarica dopo 1 secondo per sicurezza
+  setTimeout(loadEntries, 1000);
+});
+
+// LETTURA DATI
+function loadEntries() {
+  fetch(API_URL)
+    .then(res => res.json())
+    .then(data => {
+      let html = "";
+      data.forEach(row => {
+        html += `
+          <div class="entry">
+            <strong>${row[0]}</strong><br>
+            ${row[1]}<br>
+            <small>${row[2]}</small>
+          </div>
+        `;
       });
+      document.getElementById("results").innerHTML = html;
+    })
+    .catch(() => {
+      document.getElementById("results").innerHTML = "Errore nel caricamento.";
+    });
+}
 
-      function loadEntries() {
-        google.script.run
-          .withSuccessHandler(function(data) {
-            resultsDiv.innerHTML = '';
-            if (!data || data.length === 0) {
-              resultsDiv.textContent = 'Nessuna preferenza ancora inserita.';
-              return;
-            }
-            data.forEach(function(entry) {
-              const div = document.createElement('div');
-              div.className = 'entry';
-              div.innerHTML =
-                '<strong>' + entry.name + '</strong><br>' +
-                entry.pizzas + '<br><small>' + (entry.timestamp || '') + '</small>';
-              resultsDiv.appendChild(div);
-            });
-          })
-          .getEntries();
-      }
+// carica i dati appena si apre la pagina
+loadEntries();
+</script>
 
-      // carica all’avvio
-      loadEntries();
-    </script>
-  </body>
+</body>
 </html>
