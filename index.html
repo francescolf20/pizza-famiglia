@@ -60,7 +60,7 @@
 <div id="results">Caricamento...</div>
 
 <script>
-    // ⚠️ SOSTITUISCI QUESTO URL con il tuo URL della Web App dopo aver distribuito lo script
+    // ⚠️ SOSTITUISCI QUESTO URL con il tuo URL della Web App
     const API_URL = "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
 
     function esc(str) {
@@ -74,16 +74,20 @@
     document.getElementById("pizzaForm").addEventListener("submit", function (e) {
         e.preventDefault();
 
-        const formData = new URLSearchParams();
-        formData.append("action", "add");
-        formData.append("name", document.getElementById("name").value.trim());
-        formData.append("pizzas", document.getElementById("pizzas").value.trim());
+        // 👈 PREPARAZIONE DATI IN FORMATO JSON
+        const dataToSend = {
+            action: "add",
+            name: document.getElementById("name").value.trim(),
+            pizzas: document.getElementById("pizzas").value.trim()
+        };
 
         fetch(API_URL, {
             method: "POST",
-            mode: "no-cors", // Re-inserito per bypassare il blocco CORS sul POST
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: formData.toString()
+            mode: "no-cors", 
+            // 👈 NUOVO HEADER
+            headers: { "Content-Type": "application/json" }, 
+            // 👈 CONVERSIONE IN STRINGA JSON
+            body: JSON.stringify(dataToSend) 
         });
 
         alert("Preferenza salvata!");
@@ -96,15 +100,17 @@
     function deleteEntry(id) {
         if (!confirm("Vuoi davvero eliminare questa preferenza?")) return;
 
-        const formData = new URLSearchParams();
-        formData.append("action", "delete");
-        formData.append("id", id);
+        // 👈 PREPARAZIONE DATI IN FORMATO JSON
+        const dataToSend = {
+            action: "delete",
+            id: id
+        };
 
         fetch(API_URL, {
             method: "POST",
-            mode: "no-cors", // Re-inserito
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: formData.toString()
+            mode: "no-cors", 
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dataToSend)
         });
 
         setTimeout(loadEntries, 700);
@@ -118,17 +124,19 @@
         const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
         if (!newPizzas) return;
 
-        const formData = new URLSearchParams();
-        formData.append("action", "update");
-        formData.append("id", id);
-        formData.append("name", newName.trim());
-        formData.append("pizzas", newPizzas.trim());
+        // 👈 PREPARAZIONE DATI IN FORMATO JSON
+        const dataToSend = {
+            action: "update",
+            id: id,
+            name: newName.trim(),
+            pizzas: newPizzas.trim()
+        };
 
         fetch(API_URL, {
             method: "POST",
-            mode: "no-cors", // Re-inserito
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: formData.toString()
+            mode: "no-cors", 
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(dataToSend)
         });
 
         setTimeout(loadEntries, 700);
@@ -136,13 +144,11 @@
 
     // 🔄 CARICA TUTTE LE VOCI
     function loadEntries() {
-        // La richiesta GET funziona senza no-cors perché Apps Script restituisce JSON
         fetch(API_URL) 
             .then(res => res.json())
             .then(data => {
                 let html = "";
                 data.forEach(row => {
-                    // row[0] = Nome, row[1] = Pizze, row[2] = ID riga
                     html += `
                         <div class="entry">
                             <strong>${esc(row[0])}</strong><br>
