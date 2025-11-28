@@ -141,39 +141,41 @@
 
     // ELIMINA
     function deleteEntry(id) {
-      if (!confirm("Vuoi davvero eliminare questa preferenza?")) return;
+  if (!confirm("Vuoi davvero eliminare questa preferenza?")) return;
 
-      fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", id }),
-      }).then(() => {
-        setTimeout(loadEntries, 300);
-      });
-    }
+  fetch(API_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ action: "delete", id }),
+  }).then(() => {
+    setTimeout(loadEntries, 700);
+  });
+}
 
     // MODIFICA
     function editEntry(id, oldName, oldPizzas) {
-      const newName = prompt("Nuovo nome:", oldName);
-      if (newName === null) return; // annullato
-      const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
-      if (newPizzas === null) return;
+  const newName = prompt("Nuovo nome:", oldName);
+  if (newName === null) return;
 
-      if (!newName.trim() || !newPizzas.trim()) return;
+  const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
+  if (newPizzas === null) return;
 
-      fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "update",
-          id,
-          name: newName.trim(),
-          pizzas: newPizzas.trim()
-        }),
-      }).then(() => {
-        setTimeout(loadEntries, 300);
-      });
-    }
+  fetch(API_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      action: "update",
+      id,
+      name: newName.trim(),
+      pizzas: newPizzas.trim()
+    }),
+  }).then(() => {
+    setTimeout(loadEntries, 700);
+  });
+}
+
 
     // carica all'avvio
     loadEntries();
