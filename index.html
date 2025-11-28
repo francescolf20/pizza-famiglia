@@ -133,35 +133,53 @@
 
     // 🔄 CARICA TUTTE LE VOCI
     function loadEntries() {
-        fetch(API_URL)
-            .then(res => res.json())
-            .then(data => {
-                let html = "";
-                data.forEach(row => {
-                    html += `
-                        <div class="entry">
-                            <strong>${esc(row[0])}</strong><br>
-                            ${esc(row[1])}<br><br>
+    fetch(API_URL)
+        .then(res => res.json())
+        .then(data => {
+            let html = "";
 
-                            <button class="btn-edit"
-                                onclick="editEntry(${row[2]}, '${esc(row[0])}', '${esc(row[1])}')">
-                                Modifica
-                            </button>
+            data.forEach(row => {
+                html += `
+                    <div class="entry">
+                        <strong>${esc(row[0])}</strong><br>
+                        ${esc(row[1])}<br><br>
 
-                            <button class="btn-delete"
-                                onclick="deleteEntry(${row[2]})">
-                                Elimina
-                            </button>
-                        </div>
-                    `;
-                });
+                        <button class="btn-edit"
+                                data-id="${row[2]}"
+                                data-name="${esc(row[0])}"
+                                data-pizzas="${esc(row[1])}">
+                            Modifica
+                        </button>
 
-                document.getElementById("results").innerHTML = html;
-            })
-            .catch(() => {
-                document.getElementById("results").innerHTML = "Errore nel caricamento.";
+                        <button class="btn-delete"
+                                data-id="${row[2]}">
+                            Elimina
+                        </button>
+                    </div>
+                `;
             });
-    }
+
+            document.getElementById("results").innerHTML = html;
+
+            // 🔥 Aggancio eventi dopo aver creato gli elementi
+            document.querySelectorAll(".btn-edit").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    editEntry(
+                        btn.dataset.id,
+                        btn.dataset.name,
+                        btn.dataset.pizzas
+                    );
+                });
+            });
+
+            document.querySelectorAll(".btn-delete").forEach(btn => {
+                btn.addEventListener("click", () => {
+                    deleteEntry(btn.dataset.id);
+                });
+            });
+        });
+}
+
 
     loadEntries();
 </script>
