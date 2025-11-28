@@ -2,185 +2,190 @@
 <html lang="it">
 
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Pizzeria La Face</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizzeria La Face</title>
 
-  <style>
-    * {
-      box-sizing: border-box;
-    }
+    <style>
+        * {
+            box-sizing: border-box;
+        }
 
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 700px;
-      margin: 20px auto;
-      padding: 10px;
-    }
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 10px;
+        }
 
-    input,
-    textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
+        input,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
 
-    button {
-      padding: 8px 12px;
-      font-size: 14px;
-      cursor: pointer;
-      border-radius: 5px;
-      border: none;
-      margin-right: 5px;
-    }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            color: white;
+            border: none;
+        }
 
-    .btn-send {
-      background-color: #4CAF50;
-      color: white;
-    }
+        .btn-edit {
+            background: #2196F3;
+        }
 
-    .btn-edit {
-      background-color: #2196F3;
-      color: white;
-    }
+        .btn-delete {
+            background: #F44336;
+        }
 
-    .btn-delete {
-      background-color: #e53935;
-      color: white;
-    }
-
-    .entry {
-      border: 1px solid #ddd;
-      padding: 10px;
-      margin-top: 12px;
-      border-radius: 6px;
-      background: #fafafa;
-    }
-
-    h2,
-    h3 {
-      margin-bottom: 10px;
-    }
-  </style>
+        .entry {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 6px;
+            background: #f9f9f9;
+        }
+    </style>
 </head>
 
 <body>
-  <h2>Pizzeria La Face</h2>
-  <p>Inserisci il tuo nome e i gusti di pizza preferiti:</p>
+    <h2>Pizzeria La Face</h2>
+    <p>Inserisci il tuo nome e i gusti di pizza preferiti:</p>
 
-  <form id="pizzaForm">
-    <label>Nome:</label>
-    <input type="text" id="name" required />
+    <form id="pizzaForm">
+        <label>Nome:</label>
+        <input type="text" id="name" required>
 
-    <label>Gusti di pizza:</label>
-    <textarea id="pizzas" rows="3" required></textarea>
+        <label>Gusti di pizza:</label>
+        <textarea id="pizzas" rows="3" required></textarea>
 
-    <button type="submit" class="btn-send">Invia</button>
-  </form>
+        <button type="submit" style="background:#4CAF50;">Invia</button>
+    </form>
 
-  <h3>Preferenze di tutta la famiglia</h3>
-  <div id="results">Caricamento...</div>
+    <h3>Preferenze di tutta la famiglia</h3>
+    <div id="results">Caricamento...</div>
 
-  <script>
-    const API_URL =
-      "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
+    <script>
 
-    // INVIO (create)
-    document.getElementById("pizzaForm").addEventListener("submit", function (e) {
-      e.preventDefault();
+        // URL WebApp Apps Script
+        const API_URL = "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
 
-      const name = document.getElementById("name").value.trim();
-      const pizzas = document.getElementById("pizzas").value.trim();
-      if (!name || !pizzas) return;
+        // Funzione per rendere sicure le stringhe
+        function esc(str) {
+            return String(str)
+                .replace(/\\/g, "\\\\")
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '\\"');
+        }
 
-      const data = {
-        action: "create",
-        name,
-        pizzas
-      };
+        // INVIA DATI
+        document.getElementById("pizzaForm").addEventListener("submit", function (e) {
+            e.preventDefault();
 
-      fetch(API_URL, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(data),
-      }).then(() => {
-        alert("Preferenza salvata!");
-        document.getElementById("pizzaForm").reset();
-        setTimeout(loadEntries, 500);
-      });
-    });
+            const data = {
+                action: "add",
+                name: document.getElementById("name").value.trim(),
+                pizzas: document.getElementById("pizzas").value.trim()
+            };
 
-    // LETTURA
-    function loadEntries() {
-      fetch(API_URL)
-        .then((res) => res.json())
-        .then((data) => {
-          let html = "";
-          data.forEach((row) => {
-            const id = row[0];
-            const name = row[1];
-            const pizzas = row[2];
+            if (!data.name || !data.pizzas) return;
 
-            html += `
-              <div class="entry">
-      <strong>${row[0]}</strong><br>
-      ${row[1]}<br>
+            fetch(API_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(data)
+            });
 
-      <button onclick="editEntry(${row[2]}, '${row[0]}', '${row[1]}')" style="background:#2196F3;color:white;margin-top:5px;">Modifica</button>
-      <button onclick="deleteEntry(${row[2]})" style="background:#F44336;color:white;margin-top:5px;">Elimina</button>
-  </div>
-            `;
-          });
-          document.getElementById("results").innerHTML = html || "Nessuna preferenza inserita.";
-        })
-        .catch(() => {
-          document.getElementById("results").innerHTML = "Errore nel caricamento.";
+            alert("Preferenza salvata!");
+
+            setTimeout(loadEntries, 700);
         });
-    }
-
-    // ELIMINA
-    function deleteEntry(id) {
-  if (!confirm("Vuoi davvero eliminare questa preferenza?")) return;
-
-  fetch(API_URL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ action: "delete", id }),
-  }).then(() => {
-    setTimeout(loadEntries, 700);
-  });
-}
-
-    // MODIFICA
-    function editEntry(id, oldName, oldPizzas) {
-  const newName = prompt("Nuovo nome:", oldName);
-  if (newName === null) return;
-
-  const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
-  if (newPizzas === null) return;
-
-  fetch(API_URL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      action: "update",
-      id,
-      name: newName.trim(),
-      pizzas: newPizzas.trim()
-    }),
-  }).then(() => {
-    setTimeout(loadEntries, 700);
-  });
-}
 
 
-    // carica all'avvio
-    loadEntries();
-  </script>
+        // ELIMINA UNA RIGA
+        function deleteEntry(id) {
+            if (!confirm("Vuoi davvero eliminare questa preferenza?")) return;
+
+            fetch(API_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ action: "delete", id: id })
+            });
+
+            setTimeout(loadEntries, 700);
+        }
+
+
+        // MODIFICA UNA RIGA
+        function editEntry(id, oldName, oldPizzas) {
+
+            const newName = prompt("Nuovo nome:", oldName);
+            if (newName === null || newName.trim() === "") return;
+
+            const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
+            if (newPizzas === null || newPizzas.trim() === "") return;
+
+            fetch(API_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    action: "update",
+                    id: id,
+                    name: newName.trim(),
+                    pizzas: newPizzas.trim()
+                })
+            });
+
+            setTimeout(loadEntries, 700);
+        }
+
+
+        // CARICA LE VOCI
+        function loadEntries() {
+            fetch(API_URL)
+                .then(res => res.json())
+                .then(data => {
+                    let html = "";
+
+                    data.forEach(row => {
+                        html += `
+                            <div class="entry">
+                                <strong>${esc(row[0])}</strong><br>
+                                ${esc(row[1])}<br><br>
+
+                                <button class="btn-edit"
+                                        onclick="editEntry(${row[2]}, '${esc(row[0])}', '${esc(row[1])}')">
+                                    Modifica
+                                </button>
+
+                                <button class="btn-delete"
+                                        onclick="deleteEntry(${row[2]})">
+                                    Elimina
+                                </button>
+                            </div>
+                        `;
+                    });
+
+                    document.getElementById("results").innerHTML = html;
+                })
+                .catch(() => {
+                    document.getElementById("results").innerHTML = "Errore nel caricamento.";
+                });
+        }
+
+        // Prima lettura all'apertura
+        loadEntries();
+
+    </script>
+
 </body>
-
 </html>
