@@ -1,173 +1,206 @@
 <!DOCTYPE html>
 <html lang="it">
+
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Pizzeria La Face</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pizzeria La Face</title>
 
-  <style>
-    * { box-sizing: border-box; }
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 10px;
+        }
 
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 600px;
-      margin: 20px auto;
-      padding: 10px;
-    }
+        input,
+        textarea {
+            width: 100%;
+            padding: 10px;
+            margin: 8px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+        }
 
-    input, textarea {
-      width: 100%;
-      padding: 10px;
-      margin: 8px 0;
-      border-radius: 5px;
-      border: 1px solid #ccc;
-    }
+        button {
+            padding: 10px 15px;
+            font-size: 16px;
+            cursor: pointer;
+            border-radius: 5px;
+            color: white;
+            border: none;
+        }
 
-    button {
-      padding: 9px 14px;
-      font-size: 14px;
-      cursor: pointer;
-      border-radius: 5px;
-      border: none;
-      color: white;
-      margin-right: 5px;
-    }
+        .btn-edit {
+            background: #2196F3;
+        }
 
-    .btn-send   { background: #4CAF50; }
-    .btn-edit   { background: #2196F3; }
-    .btn-delete { background: #F44336; }
+        .btn-delete {
+            background: #F44336;
+        }
 
-    .entry {
-      border: 1px solid #ddd;
-      padding: 12px;
-      margin-top: 12px;
-      border-radius: 6px;
-      background: #f9f9f9;
-    }
-  </style>
+        .btn-send {
+            background: #4CAF50;
+        }
+
+        .entry {
+            border: 1px solid #ddd;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 6px;
+            background: #f9f9f9;
+        }
+    </style>
 </head>
 
 <body>
-  <h2>Pizzeria La Face</h2>
-  <p>Inserisci il tuo nome e i gusti di pizza preferiti:</p>
 
-  <form id="pizzaForm">
-    <label>Nome:</label>
-    <input type="text" id="name" required>
+    <h2>Pizzeria La Face</h2>
+    <p>Inserisci il tuo nome e i gusti di pizza preferiti:</p>
 
-    <label>Gusti di pizza:</label>
-    <textarea id="pizzas" rows="3" required></textarea>
+    <form id="pizzaForm">
+        <label>Nome:</label>
+        <input type="text" id="name" required>
 
-    <button type="submit" class="btn-send">Invia</button>
-  </form>
+        <label>Gusti di pizza:</label>
+        <textarea id="pizzas" rows="3" required></textarea>
 
-  <h3>Preferenze di tutta la famiglia</h3>
-  <div id="results">Caricamento...</div>
+        <button type="submit" class="btn-send">Invia</button>
+    </form>
 
-  <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
+    <h3>Preferenze di tutta la famiglia</h3>
+    <div id="results">Caricamento...</div>
 
-    // aggiungi
-    document.getElementById("pizzaForm").addEventListener("submit", function (e) {
-      e.preventDefault();
 
-      const name = document.getElementById("name").value.trim();
-      const pizzas = document.getElementById("pizzas").value.trim();
-      if (!name || !pizzas) return;
+    <script>
 
-      fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "add", name, pizzas })
-      });
+        // URL reale del tuo WebApp
+        const API_URL = "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
 
-      document.getElementById("pizzaForm").reset();
-      setTimeout(loadEntries, 500);
-    });
+        // Evita problemi con apostrofi e virgolette
+        function esc(str) {
+            return String(str)
+                .replace(/\\/g, "\\\\")
+                .replace(/'/g, "\\'")
+                .replace(/"/g, '\\"');
+        }
 
-    function deleteEntry(id) {
-      if (!confirm("Eliminare questa preferenza?")) return;
+        // Wrapper per evitare POST JSON (che crea righe vuote)
+        function sendForm(data) {
+            const form = new URLSearchParams();
+            for (let k in data) form.append(k, data[k]);
 
-      fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ action: "delete", id })
-      });
+            return fetch(API_URL, {
+                method: "POST",
+                mode: "no-cors",
+                headers: { "Content-Type": "application/x-www-form-urlencoded" },
+                body: form.toString()
+            });
+        }
 
-      setTimeout(loadEntries, 500);
-    }
 
-    function editEntry(id, oldName, oldPizzas) {
-      const newName = prompt("Nuovo nome:", oldName);
-      if (newName === null || newName.trim() === "") return;
+        // AGGIUNTA nuovo elemento
+        document.getElementById("pizzaForm").addEventListener("submit", function (e) {
+            e.preventDefault();
 
-      const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
-      if (newPizzas === null || newPizzas.trim() === "") return;
+            const name = document.getElementById("name").value.trim();
+            const pizzas = document.getElementById("pizzas").value.trim();
 
-      fetch(API_URL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          action: "update",
-          id,
-          name: newName.trim(),
-          pizzas: newPizzas.trim()
-        })
-      });
+            if (!name || !pizzas) return;
 
-      setTimeout(loadEntries, 500);
-    }
+            sendForm({
+                action: "add",
+                name: name,
+                pizzas: pizzas
+            });
 
-    function loadEntries() {
-      fetch(API_URL)
-        .then(res => res.json())
-        .then(data => {
-          const container = document.getElementById("results");
-          container.innerHTML = "";
+            alert("Preferenza salvata!");
 
-          data.forEach(row => {
-            const name   = row[0];
-            const pizzas = row[1];
-            const id     = row[2]; // numero di riga sul foglio
+            document.getElementById("pizzaForm").reset();
 
-            const div = document.createElement("div");
-            div.className = "entry";
-
-            const strong = document.createElement("strong");
-            strong.textContent = name;
-            div.appendChild(strong);
-            div.appendChild(document.createElement("br"));
-
-            div.appendChild(document.createTextNode(pizzas));
-            div.appendChild(document.createElement("br"));
-            div.appendChild(document.createElement("br"));
-
-            const editBtn = document.createElement("button");
-            editBtn.className = "btn-edit";
-            editBtn.textContent = "Modifica";
-            editBtn.addEventListener("click", () => editEntry(id, name, pizzas));
-
-            const delBtn = document.createElement("button");
-            delBtn.className = "btn-delete";
-            delBtn.textContent = "Elimina";
-            delBtn.addEventListener("click", () => deleteEntry(id));
-
-            div.appendChild(editBtn);
-            div.appendChild(delBtn);
-
-            container.appendChild(div);
-          });
-        })
-        .catch(err => {
-          console.error(err);
-          document.getElementById("results").textContent = "Errore nel caricamento.";
+            setTimeout(loadEntries, 600);
         });
-    }
 
-    loadEntries();
-  </script>
+
+        // ELIMINA
+        function deleteEntry(id) {
+            if (!confirm("Vuoi davvero eliminare questa preferenza?")) return;
+
+            sendForm({
+                action: "delete",
+                id: id
+            });
+
+            setTimeout(loadEntries, 600);
+        }
+
+
+        // MODIFICA
+        function editEntry(id, oldName, oldPizzas) {
+
+            const newName = prompt("Nuovo nome:", oldName);
+            if (!newName) return;
+
+            const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
+            if (!newPizzas) return;
+
+            sendForm({
+                action: "update",
+                id: id,
+                name: newName,
+                pizzas: newPizzas
+            });
+
+            setTimeout(loadEntries, 600);
+        }
+
+
+        // CARICA TUTTE LE ENTRATE
+        function loadEntries() {
+            fetch(API_URL)
+                .then(res => res.json())
+                .then(data => {
+                    let html = "";
+
+                    data.forEach(row => {
+                        const name = esc(row[0]);
+                        const pizzas = esc(row[1]);
+                        const id = row[3]; // ID salvato nel foglio
+
+                        html += `
+                            <div class="entry">
+                                <strong>${name}</strong><br>
+                                ${pizzas}<br><br>
+
+                                <button class="btn-edit"
+                                    onclick="editEntry(${id}, '${name}', '${pizzas}')">
+                                    Modifica
+                                </button>
+
+                                <button class="btn-delete"
+                                    onclick="deleteEntry(${id})">
+                                    Elimina
+                                </button>
+                            </div>
+                        `;
+                    });
+
+                    document.getElementById("results").innerHTML = html;
+                })
+                .catch(err => {
+                    console.error(err);
+                    document.getElementById("results").innerHTML =
+                        "<b>Errore nel caricamento.</b>";
+                });
+        }
+
+
+        // Carica all'avvio
+        loadEntries();
+
+    </script>
+
 </body>
+
 </html>
