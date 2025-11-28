@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Preferenze Pizza Famiglia</title>
+  <style>
+    body { font-family: Arial, sans-serif; max-width: 500px; margin: 30px auto; }
+    input, textarea { width: 100%; padding: 10px; margin: 8px 0; }
+    button { padding: 10px 15px; font-size: 16px; cursor: pointer; }
+    .entry { border: 1px solid #ddd; padding: 10px; margin-top: 10px; border-radius: 6px; }
+  </style>
+</head>
+<body>
+  <h2>Preferenze Pizza</h2>
+  <p>Inserisci il tuo nome e i gusti di pizza preferiti.</p>
+
+  <form id="pizzaForm">
+    <label>Nome:</label>
+    <input type="text" id="name" required />
+
+    <label>Gusti di pizza:</label>
+    <textarea id="pizzas" rows="3" required></textarea>
+
+    <button type="submit">Invia</button>
+  </form>
+
+  <h3>Risposte della famiglia</h3>
+  <div id="results"></div>
+
+  <script>
+    const form = document.getElementById('pizzaForm');
+    const results = document.getElementById('results');
+
+    function loadEntries() {
+      const saved = JSON.parse(localStorage.getItem('pizzaEntries') || '[]');
+      results.innerHTML = '';
+      saved.forEach(entry => {
+        const div = document.createElement('div');
+        div.className = 'entry';
+        div.innerHTML = `<strong>${entry.name}</strong><br>${entry.pizzas}`;
+        results.appendChild(div);
+      });
+    }
+
+    form.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = document.getElementById('name').value.trim();
+      const pizzas = document.getElementById('pizzas').value.trim();
+
+      if (!name || !pizzas) return;
+
+      const saved = JSON.parse(localStorage.getItem('pizzaEntries') || '[]');
+      saved.push({ name, pizzas });
+
+      localStorage.setItem('pizzaEntries', JSON.stringify(saved));
+      form.reset();
+      loadEntries();
+    });
+
+    loadEntries();
+  </script>
+</body>
+</html>
