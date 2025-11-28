@@ -1,186 +1,177 @@
 <!DOCTYPE html>
 <html lang="it">
-
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pizzeria La Face</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Pizzeria La Face</title>
 
-    <style>
-        * { box-sizing: border-box; }
+  <style>
+    * { box-sizing: border-box; }
 
-        body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 10px;
-        }
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 600px;
+      margin: 20px auto;
+      padding: 10px;
+    }
 
-        input, textarea {
-            width: 100%;
-            padding: 10px;
-            margin: 8px 0;
-            border-radius: 5px;
-            border: 1px solid #ccc;
-        }
+    input, textarea {
+      width: 100%;
+      padding: 10px;
+      margin: 8px 0;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
 
-        button {
-            padding: 9px 14px;
-            font-size: 14px;
-            cursor: pointer;
-            border-radius: 5px;
-            border: none;
-            color: white;
-            margin-right: 5px;
-        }
+    button {
+      padding: 9px 14px;
+      font-size: 14px;
+      cursor: pointer;
+      border-radius: 5px;
+      border: none;
+      color: white;
+      margin-right: 5px;
+    }
 
-        .btn-send { background: #4CAF50; }
-        .btn-edit { background: #2196F3; }
-        .btn-delete { background: #F44336; }
+    .btn-send   { background: #4CAF50; }
+    .btn-edit   { background: #2196F3; }
+    .btn-delete { background: #F44336; }
 
-        .entry {
-            border: 1px solid #ddd;
-            padding: 12px;
-            margin-top: 12px;
-            border-radius: 6px;
-            background: #f9f9f9;
-        }
-    </style>
+    .entry {
+      border: 1px solid #ddd;
+      padding: 12px;
+      margin-top: 12px;
+      border-radius: 6px;
+      background: #f9f9f9;
+    }
+  </style>
 </head>
 
 <body>
+  <h2>Pizzeria La Face</h2>
+  <p>Inserisci il tuo nome e i gusti di pizza preferiti:</p>
 
-    <h2>Pizzeria La Face</h2>
-    <p>Inserisci il tuo nome e i gusti di pizza preferiti:</p>
+  <form id="pizzaForm">
+    <label>Nome:</label>
+    <input type="text" id="name" required>
 
-    <form id="pizzaForm">
-        <label>Nome:</label>
-        <input type="text" id="name" required>
+    <label>Gusti di pizza:</label>
+    <textarea id="pizzas" rows="3" required></textarea>
 
-        <label>Gusti di pizza:</label>
-        <textarea id="pizzas" rows="3" required></textarea>
+    <button type="submit" class="btn-send">Invia</button>
+  </form>
 
-        <button type="submit" class="btn-send">Invia</button>
-    </form>
+  <h3>Preferenze di tutta la famiglia</h3>
+  <div id="results">Caricamento...</div>
 
-    <h3>Preferenze di tutta la famiglia</h3>
-    <div id="results">Caricamento...</div>
+  <script>
+    // URL del WebApp Apps Script
+    const API_URL = "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
 
-    <script>
-        // URL del WebApp GOOGLE APPS SCRIPT
-        const API_URL =
-            "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
+    // ---------- AGGIUNTA ----------
+    document.getElementById("pizzaForm").addEventListener("submit", function (e) {
+      e.preventDefault();
 
-        // Escape stringhe per evitare errori HTML
-        function esc(str) {
-            return String(str)
-                .replace(/\\/g, "\\\\")
-                .replace(/'/g, "\\'")
-                .replace(/"/g, '\\"');
-        }
+      const name   = document.getElementById("name").value.trim();
+      const pizzas = document.getElementById("pizzas").value.trim();
 
-        //------------------------------
-        // 🎯 AGGIUNGI UNA RIGA
-        //------------------------------
-        document.getElementById("pizzaForm").addEventListener("submit", function (e) {
-            e.preventDefault();
+      if (!name || !pizzas) return;
 
-            const data = {
-                action: "add",
-                name: document.getElementById("name").value.trim(),
-                pizzas: document.getElementById("pizzas").value.trim()
-            };
+      fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "add", name, pizzas })
+      }).then(() => {
+        document.getElementById("pizzaForm").reset();
+        setTimeout(loadEntries, 300);
+      });
+    });
 
-            if (!data.name || !data.pizzas) return;
+    // ---------- ELIMINA ----------
+    function deleteEntry(id) {
+      if (!confirm("Eliminare questa preferenza?")) return;
 
-            fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify(data)
-            })
-            .then(() => {
-                document.getElementById("pizzaForm").reset();
-                setTimeout(loadEntries, 300);
-            });
+      fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ action: "delete", id })
+      }).then(() => {
+        setTimeout(loadEntries, 300);
+      });
+    }
+
+    // ---------- MODIFICA ----------
+    function editEntry(id, oldName, oldPizzas) {
+      const newName = prompt("Nuovo nome:", oldName);
+      if (newName === null || newName.trim() === "") return;
+
+      const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
+      if (newPizzas === null || newPizzas.trim() === "") return;
+
+      fetch(API_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          action: "update",
+          id,
+          name: newName.trim(),
+          pizzas: newPizzas.trim()
+        })
+      }).then(() => {
+        setTimeout(loadEntries, 300);
+      });
+    }
+
+    // ---------- CARICA TUTTE LE VOCI ----------
+    function loadEntries() {
+      fetch(API_URL)
+        .then(res => res.json())
+        .then(data => {
+          const container = document.getElementById("results");
+          container.innerHTML = "";
+
+          data.forEach(row => {
+            const name   = row[0];
+            const pizzas = row[1];
+            const id     = row[2];   // terza colonna = ID (timestamp)
+
+            const div = document.createElement("div");
+            div.className = "entry";
+
+            const strong = document.createElement("strong");
+            strong.textContent = name;
+            div.appendChild(strong);
+            div.appendChild(document.createElement("br"));
+
+            const pizzasText = document.createTextNode(pizzas);
+            div.appendChild(pizzasText);
+            div.appendChild(document.createElement("br"));
+            div.appendChild(document.createElement("br"));
+
+            const editBtn = document.createElement("button");
+            editBtn.className = "btn-edit";
+            editBtn.textContent = "Modifica";
+            editBtn.addEventListener("click", () => editEntry(id, name, pizzas));
+
+            const delBtn = document.createElement("button");
+            delBtn.className = "btn-delete";
+            delBtn.textContent = "Elimina";
+            delBtn.addEventListener("click", () => deleteEntry(id));
+
+            div.appendChild(editBtn);
+            div.appendChild(delBtn);
+
+            container.appendChild(div);
+          });
+        })
+        .catch(err => {
+          console.error(err);
+          document.getElementById("results").textContent = "Errore nel caricamento.";
         });
+    }
 
-
-        //------------------------------
-        // ❌ ELIMINA RIGA
-        //------------------------------
-        function deleteEntry(id) {
-            if (!confirm("Eliminare questa voce?")) return;
-
-            fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ action: "delete", id: id })
-            })
-            .then(() => setTimeout(loadEntries, 300));
-        }
-
-
-        //------------------------------
-        // ✏️ MODIFICA RIGA
-        //------------------------------
-        function editEntry(id, oldName, oldPizzas) {
-            const newName = prompt("Nuovo nome:", oldName);
-            if (!newName) return;
-
-            const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
-            if (!newPizzas) return;
-
-            fetch(API_URL, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    action: "update",
-                    id: id,
-                    name: newName.trim(),
-                    pizzas: newPizzas.trim()
-                })
-            })
-            .then(() => setTimeout(loadEntries, 300));
-        }
-
-
-        //------------------------------
-        // 📜 CARICA TUTTE LE RIGHE
-        //------------------------------
-        function loadEntries() {
-            fetch(API_URL)
-                .then(res => res.json())
-                .then(data => {
-                    let html = "";
-
-                    data.forEach(row => {
-                        html += `
-                            <div class="entry">
-                                <strong>${esc(row[0])}</strong><br>
-                                ${esc(row[1])}<br><br>
-
-                                <button class="btn-edit"
-                                        onclick="editEntry(${row[2]}, '${esc(row[0])}', '${esc(row[1])}')">
-                                    Modifica
-                                </button>
-
-                                <button class="btn-delete"
-                                        onclick="deleteEntry(${row[2]})">
-                                    Elimina
-                                </button>
-                            </div>
-                        `;
-                    });
-
-                    document.getElementById("results").innerHTML = html;
-                })
-                .catch(err => {
-                    document.getElementById("results").innerHTML = "Errore caricamento.";
-                });
-        }
-
-        loadEntries();
-    </script>
-
+    // prima lettura
+    loadEntries();
+  </script>
 </body>
 </html>
