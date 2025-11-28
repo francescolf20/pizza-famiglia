@@ -65,42 +65,40 @@
   <div id="results">Caricamento...</div>
 
   <script>
-    // URL del WebApp Apps Script
     const API_URL = "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
 
-    // ---------- AGGIUNTA ----------
+    // aggiungi
     document.getElementById("pizzaForm").addEventListener("submit", function (e) {
       e.preventDefault();
 
-      const name   = document.getElementById("name").value.trim();
+      const name = document.getElementById("name").value.trim();
       const pizzas = document.getElementById("pizzas").value.trim();
-
       if (!name || !pizzas) return;
 
       fetch(API_URL, {
         method: "POST",
+        mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "add", name, pizzas })
-      }).then(() => {
-        document.getElementById("pizzaForm").reset();
-        setTimeout(loadEntries, 300);
       });
+
+      document.getElementById("pizzaForm").reset();
+      setTimeout(loadEntries, 500);
     });
 
-    // ---------- ELIMINA ----------
     function deleteEntry(id) {
       if (!confirm("Eliminare questa preferenza?")) return;
 
       fetch(API_URL, {
         method: "POST",
+        mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ action: "delete", id })
-      }).then(() => {
-        setTimeout(loadEntries, 300);
       });
+
+      setTimeout(loadEntries, 500);
     }
 
-    // ---------- MODIFICA ----------
     function editEntry(id, oldName, oldPizzas) {
       const newName = prompt("Nuovo nome:", oldName);
       if (newName === null || newName.trim() === "") return;
@@ -110,6 +108,7 @@
 
       fetch(API_URL, {
         method: "POST",
+        mode: "no-cors",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           action: "update",
@@ -117,12 +116,11 @@
           name: newName.trim(),
           pizzas: newPizzas.trim()
         })
-      }).then(() => {
-        setTimeout(loadEntries, 300);
       });
+
+      setTimeout(loadEntries, 500);
     }
 
-    // ---------- CARICA TUTTE LE VOCI ----------
     function loadEntries() {
       fetch(API_URL)
         .then(res => res.json())
@@ -133,7 +131,7 @@
           data.forEach(row => {
             const name   = row[0];
             const pizzas = row[1];
-            const id     = row[2];   // terza colonna = ID (timestamp)
+            const id     = row[2]; // numero di riga sul foglio
 
             const div = document.createElement("div");
             div.className = "entry";
@@ -143,8 +141,7 @@
             div.appendChild(strong);
             div.appendChild(document.createElement("br"));
 
-            const pizzasText = document.createTextNode(pizzas);
-            div.appendChild(pizzasText);
+            div.appendChild(document.createTextNode(pizzas));
             div.appendChild(document.createElement("br"));
             div.appendChild(document.createElement("br"));
 
@@ -170,7 +167,6 @@
         });
     }
 
-    // prima lettura
     loadEntries();
   </script>
 </body>
