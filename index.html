@@ -63,18 +63,18 @@
     // ⚠️ SOSTITUISCI QUESTO URL con il tuo URL della Web App
     const API_URL = "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
 
+    // Funzione di escaping per gestire apici e virgolette
     function esc(str) {
+        // Gestisce i doppi apici e i backslash, essenziale per la sintassi onclick
         return String(str)
-            .replace(/\\/g, "\\\\")
-            .replace(/'/g, "\\'")
+            .replace(/\\/g, "\\\\") 
             .replace(/"/g, '\\"');
     }
 
-    // 📌 INVIO DATI (AGGIUNGI)
+    // 📌 INVIO DATI (AGGIUNGI) - Usa JSON
     document.getElementById("pizzaForm").addEventListener("submit", function (e) {
         e.preventDefault();
 
-        // 👈 PREPARAZIONE DATI IN FORMATO JSON
         const dataToSend = {
             action: "add",
             name: document.getElementById("name").value.trim(),
@@ -84,9 +84,7 @@
         fetch(API_URL, {
             method: "POST",
             mode: "no-cors", 
-            // 👈 NUOVO HEADER
             headers: { "Content-Type": "application/json" }, 
-            // 👈 CONVERSIONE IN STRINGA JSON
             body: JSON.stringify(dataToSend) 
         });
 
@@ -96,11 +94,10 @@
         setTimeout(loadEntries, 700);
     });
 
-    // 🗑 ELIMINA
+    // 🗑 ELIMINA - Usa JSON
     function deleteEntry(id) {
         if (!confirm("Vuoi davvero eliminare questa preferenza?")) return;
 
-        // 👈 PREPARAZIONE DATI IN FORMATO JSON
         const dataToSend = {
             action: "delete",
             id: id
@@ -116,7 +113,7 @@
         setTimeout(loadEntries, 700);
     }
 
-    // ✏️ MODIFICA
+    // ✏️ MODIFICA - Usa JSON
     function editEntry(id, oldName, oldPizzas) {
         const newName = prompt("Nuovo nome:", oldName);
         if (!newName) return;
@@ -124,7 +121,6 @@
         const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
         if (!newPizzas) return;
 
-        // 👈 PREPARAZIONE DATI IN FORMATO JSON
         const dataToSend = {
             action: "update",
             id: id,
@@ -155,7 +151,8 @@
                             ${esc(row[1])}<br><br>
 
                             <button class="btn-edit"
-                                onclick="editEntry(${row[2]}, '${esc(row[0])}', '${esc(row[1])}')">
+                                // 👈 CORREZIONE CHIAVE: Uso di doppi apici e funzione esc() per prevenire SyntaxError
+                                onclick="editEntry(${row[2]}, \"${esc(row[0])}\", \"${esc(row[1])}\")">
                                 Modifica
                             </button>
 
