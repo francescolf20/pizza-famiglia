@@ -9,11 +9,26 @@
     <style>
         * { box-sizing: border-box; }
         body {
-            font-family: Arial, sans-serif;
-            max-width: 600px;
-            margin: 20px auto;
-            padding: 10px;
-        }
+    background: #c2b8a4;
+    background-image: url(https://raw.githubusercontent.com/francescolf20/pizza-famiglia/refs/heads/main/cuoco.png);
+    background-repeat: no-repeat;
+    background-position: right top;
+    background-position-x: left;
+    font-family: Arial, sans-serif;
+    max-width: 600px;
+    margin: 20px auto;
+    padding: 10px;
+}
+
+@media (max-width: 600px) {
+    body{
+background-size: cover;
+    background-position-x: center;
+    background-position-y: 450px;
+    }
+
+}
+
         input, textarea {
             width: 100%;
             padding: 10px;
@@ -38,12 +53,19 @@
             border-radius: 6px;
             background: #f9f9f9;
         }
+
+        .container {
+    background-color: hsl(40deg 100% 97.06% / 93%);
+    padding: 20px;
+    border-radius: 20px;
+}
     </style>
 </head>
 
 <body>
 
-<h2>Pizzeria La Face</h2>
+<div class="container">
+    <h2>Pizzeria La Face</h2>
 <p>Inserisci il tuo nome e i gusti di pizza preferiti:</p>
 
 <form id="pizzaForm">
@@ -58,6 +80,7 @@
 
 <h3>Preferenze di tutta la famiglia</h3>
 <div id="results">Caricamento...</div>
+</div>
 
 <script>
     const API_URL = "https://script.google.com/macros/s/AKfycbzAA38lqjCDgcVUkVYe2Yznxe0ti4YnOpEx6eYKdoN2Zpilc-sChW0C6YPBN6lviDU1Uw/exec";
