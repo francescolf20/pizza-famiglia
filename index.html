@@ -1,30 +1,32 @@
-<!DOCTYPE html>
-<html lang="it">
-
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pizzeria La Face</title>
-
-    <style>
+<style>
         * { box-sizing: border-box; }
         body {
-    background: #c2b8a4;
-    background-image: url(https://raw.githubusercontent.com/francescolf20/pizza-famiglia/refs/heads/main/cuoco.png);
-    background-repeat: no-repeat;
-    background-position: right top;
-    background-position-x: left;
-    font-family: Arial, sans-serif;
-    max-width: 600px;
-    margin: 20px auto;
-    padding: 10px;
+            /* Impostazioni generali */
+            background: #c2b8a4;
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 10px;
+            
+            /* Immagine di Sfondo (Cuoco) */
+            background-image: url(https://raw.githubusercontent.com/francescolf20/pizza-famiglia/refs/heads/main/cuoco.png);
+            
+            /* 💥 CORREZIONE: Imposta la dimensione, la ripetizione e la posizione */
+            /* Non ripetere l'immagine */
+            background-repeat: no-repeat;
+            
+            /* Adatta l'immagine in modo che si veda completamente (se è più piccola della viewport) o copra il bordo */
+            background-size: contain; 
+            
+            /* Posiziona in alto a destra (top right) e non usare position-x separato */
+            background-position: right top;
 }
 
 @media (max-width: 600px) {
     body{
-background-size: cover;
-    background-position-x: center;
-    background-position-y: 450px;
+            /* 💥 CORREZIONE MOBILE: Posiziona l'immagine in basso al centro e mantieni la dimensione */
+            background-position: center 450px;
+            background-size: 80%; /* Riduci un po' la dimensione sul mobile se troppo grande */
     }
 
 }
@@ -60,154 +62,3 @@ background-size: cover;
     border-radius: 20px;
 }
     </style>
-</head>
-
-<body>
-
-<div class="container">
-    <h2>Pizzeria La Face</h2>
-<p>Inserisci il tuo nome e i gusti di pizza preferiti:</p>
-
-<form id="pizzaForm">
-    <label>Nome:</label>
-    <input type="text" id="name" required>
-
-    <label>Gusti di pizza:</label>
-    <textarea id="pizzas" rows="3" required></textarea>
-
-    <button type="submit" style="background:#4CAF50;">Invia</button>
-</form>
-
-<h3>Lista ordini</h3>
-<div id="results">Caricamento...</div>
-</div>
-
-<script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzAA38lqjCDgcVUkVYe2Yznxe0ti4YnOpEx6eYKdoN2Zpilc-sChW0C6YPBN6lviDU1Uw/exec";
-
-    function esc(str) {
-        return String(str)
-            .replace(/\\/g, "\\\\")
-            .replace(/'/g, "\\'")
-            .replace(/"/g, '\\"');
-    }
-
-    // 📌 INVIO DATI — FORMATO COMPATIBILE CON APPS SCRIPT
-    document.getElementById("pizzaForm").addEventListener("submit", function (e) {
-        e.preventDefault();
-
-        const formData = new URLSearchParams();
-        formData.append("action", "add");
-        formData.append("name", document.getElementById("name").value.trim());
-        formData.append("pizzas", document.getElementById("pizzas").value.trim());
-
-        fetch(API_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: formData.toString()
-        });
-
-        alert("Preferenza salvata!");
-        // 💥 AGGIUNTO: Resetta tutti i campi del form
-        e.target.reset(); 
-        setTimeout(loadEntries, 700);
-    });
-
-    // 🗑 ELIMINA
-    function deleteEntry(id) {
-        if (!confirm("Vuoi davvero eliminare questa preferenza?")) return;
-
-        const formData = new URLSearchParams();
-        formData.append("action", "delete");
-        formData.append("id", id);
-
-        fetch(API_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: formData.toString()
-        });
-
-        setTimeout(loadEntries, 700);
-    }
-
-    // ✏️ MODIFICA
-    function editEntry(id, oldName, oldPizzas) {
-        const newName = prompt("Nuovo nome:", oldName);
-        if (!newName) return;
-
-        const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
-        if (!newPizzas) return;
-
-        const formData = new URLSearchParams();
-        formData.append("action", "update");
-        formData.append("id", id);
-        formData.append("name", newName.trim());
-        formData.append("pizzas", newPizzas.trim());
-
-        fetch(API_URL, {
-            method: "POST",
-            mode: "no-cors",
-            headers: { "Content-Type": "application/x-www-form-urlencoded" },
-            body: formData.toString()
-        });
-
-        setTimeout(loadEntries, 700);
-    }
-
-    // 🔄 CARICA TUTTE LE VOCI
-    function loadEntries() {
-    fetch(API_URL)
-        .then(res => res.json())
-        .then(data => {
-            let html = "";
-
-            data.forEach(row => {
-                html += `
-                    <div class="entry">
-                        <strong>${esc(row[0])}</strong><br>
-                        ${esc(row[1])}<br><br>
-
-                        <button class="btn-edit"
-                                data-id="${row[2]}"
-                                data-name="${esc(row[0])}"
-                                data-pizzas="${esc(row[1])}">
-                            Modifica
-                        </button>
-
-                        <button class="btn-delete"
-                                data-id="${row[2]}">
-                            Elimina
-                        </button>
-                    </div>
-                `;
-            });
-
-            document.getElementById("results").innerHTML = html;
-
-            // 🔥 Aggancio eventi dopo aver creato gli elementi
-            document.querySelectorAll(".btn-edit").forEach(btn => {
-                btn.addEventListener("click", () => {
-                    editEntry(
-                        btn.dataset.id,
-                        btn.dataset.name,
-                        btn.dataset.pizzas
-                    );
-                });
-            });
-
-            document.querySelectorAll(".btn-delete").forEach(btn => {
-                btn.addEventListener("click", () => {
-                    deleteEntry(btn.dataset.id);
-                });
-            });
-        });
-}
-
-
-    loadEntries();
-</script>
-
-</body>
-</html>
