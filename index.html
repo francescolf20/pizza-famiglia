@@ -7,22 +7,20 @@
     <title>Pizzeria La Face</title>
 
     <style>
+        * { box-sizing: border-box; }
         body {
             font-family: Arial, sans-serif;
             max-width: 600px;
             margin: 20px auto;
             padding: 10px;
         }
-
-        input,
-        textarea {
+        input, textarea {
             width: 100%;
             padding: 10px;
             margin: 8px 0;
             border-radius: 5px;
             border: 1px solid #ccc;
         }
-
         button {
             padding: 10px 15px;
             font-size: 16px;
@@ -31,19 +29,8 @@
             color: white;
             border: none;
         }
-
-        .btn-edit {
-            background: #2196F3;
-        }
-
-        .btn-delete {
-            background: #F44336;
-        }
-
-        .btn-send {
-            background: #4CAF50;
-        }
-
+        .btn-edit { background: #2196F3; }
+        .btn-delete { background: #F44336; }
         .entry {
             border: 1px solid #ddd;
             padding: 10px;
@@ -56,151 +43,128 @@
 
 <body>
 
-    <h2>Pizzeria La Face</h2>
-    <p>Inserisci il tuo nome e i gusti di pizza preferiti:</p>
+<h2>Pizzeria La Face</h2>
+<p>Inserisci il tuo nome e i gusti di pizza preferiti:</p>
 
-    <form id="pizzaForm">
-        <label>Nome:</label>
-        <input type="text" id="name" required>
+<form id="pizzaForm">
+    <label>Nome:</label>
+    <input type="text" id="name" required>
 
-        <label>Gusti di pizza:</label>
-        <textarea id="pizzas" rows="3" required></textarea>
+    <label>Gusti di pizza:</label>
+    <textarea id="pizzas" rows="3" required></textarea>
 
-        <button type="submit" class="btn-send">Invia</button>
-    </form>
+    <button type="submit" style="background:#4CAF50;">Invia</button>
+</form>
 
-    <h3>Preferenze di tutta la famiglia</h3>
-    <div id="results">Caricamento...</div>
+<h3>Preferenze di tutta la famiglia</h3>
+<div id="results">Caricamento...</div>
 
+<script>
+    const API_URL = "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
 
-    <script>
+    function esc(str) {
+        return String(str)
+            .replace(/\\/g, "\\\\")
+            .replace(/'/g, "\\'")
+            .replace(/"/g, '\\"');
+    }
 
-        // URL reale del tuo WebApp
-        const API_URL = "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
+    // 📌 INVIO DATI — FORMATO COMPATIBILE CON APPS SCRIPT
+    document.getElementById("pizzaForm").addEventListener("submit", function (e) {
+        e.preventDefault();
 
-        // Evita problemi con apostrofi e virgolette
-        function esc(str) {
-            return String(str)
-                .replace(/\\/g, "\\\\")
-                .replace(/'/g, "\\'")
-                .replace(/"/g, '\\"');
-        }
+        const formData = new URLSearchParams();
+        formData.append("action", "add");
+        formData.append("name", document.getElementById("name").value.trim());
+        formData.append("pizzas", document.getElementById("pizzas").value.trim());
 
-        // Wrapper per evitare POST JSON (che crea righe vuote)
-        function sendForm(data) {
-            const form = new URLSearchParams();
-            for (let k in data) form.append(k, data[k]);
-
-            return fetch(API_URL, {
-                method: "POST",
-                mode: "no-cors",
-                headers: { "Content-Type": "application/x-www-form-urlencoded" },
-                body: form.toString()
-            });
-        }
-
-
-        // AGGIUNTA nuovo elemento
-        document.getElementById("pizzaForm").addEventListener("submit", function (e) {
-            e.preventDefault();
-
-            const name = document.getElementById("name").value.trim();
-            const pizzas = document.getElementById("pizzas").value.trim();
-
-            if (!name || !pizzas) return;
-
-            sendForm({
-                action: "add",
-                name: name,
-                pizzas: pizzas
-            });
-
-            alert("Preferenza salvata!");
-
-            document.getElementById("pizzaForm").reset();
-
-            setTimeout(loadEntries, 600);
+        fetch(API_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString()
         });
 
+        alert("Preferenza salvata!");
+        setTimeout(loadEntries, 700);
+    });
 
-        // ELIMINA
-        function deleteEntry(id) {
-            if (!confirm("Vuoi davvero eliminare questa preferenza?")) return;
+    // 🗑 ELIMINA
+    function deleteEntry(id) {
+        if (!confirm("Vuoi davvero eliminare questa preferenza?")) return;
 
-            sendForm({
-                action: "delete",
-                id: id
-            });
+        const formData = new URLSearchParams();
+        formData.append("action", "delete");
+        formData.append("id", id);
 
-            setTimeout(loadEntries, 600);
-        }
+        fetch(API_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString()
+        });
 
+        setTimeout(loadEntries, 700);
+    }
 
-        // MODIFICA
-        function editEntry(id, oldName, oldPizzas) {
+    // ✏️ MODIFICA
+    function editEntry(id, oldName, oldPizzas) {
+        const newName = prompt("Nuovo nome:", oldName);
+        if (!newName) return;
 
-            const newName = prompt("Nuovo nome:", oldName);
-            if (!newName) return;
+        const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
+        if (!newPizzas) return;
 
-            const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
-            if (!newPizzas) return;
+        const formData = new URLSearchParams();
+        formData.append("action", "update");
+        formData.append("id", id);
+        formData.append("name", newName.trim());
+        formData.append("pizzas", newPizzas.trim());
 
-            sendForm({
-                action: "update",
-                id: id,
-                name: newName,
-                pizzas: newPizzas
-            });
+        fetch(API_URL, {
+            method: "POST",
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString()
+        });
 
-            setTimeout(loadEntries, 600);
-        }
+        setTimeout(loadEntries, 700);
+    }
 
+    // 🔄 CARICA TUTTE LE VOCI
+    function loadEntries() {
+        fetch(API_URL)
+            .then(res => res.json())
+            .then(data => {
+                let html = "";
+                data.forEach(row => {
+                    html += `
+                        <div class="entry">
+                            <strong>${esc(row[0])}</strong><br>
+                            ${esc(row[1])}<br><br>
 
-        // CARICA TUTTE LE ENTRATE
-        function loadEntries() {
-            fetch(API_URL)
-                .then(res => res.json())
-                .then(data => {
-                    let html = "";
+                            <button class="btn-edit"
+                                onclick="editEntry(${row[2]}, '${esc(row[0])}', '${esc(row[1])}')">
+                                Modifica
+                            </button>
 
-                    data.forEach(row => {
-                        const name = esc(row[0]);
-                        const pizzas = esc(row[1]);
-                        const id = row[3]; // ID salvato nel foglio
-
-                        html += `
-                            <div class="entry">
-                                <strong>${name}</strong><br>
-                                ${pizzas}<br><br>
-
-                                <button class="btn-edit"
-                                    onclick="editEntry(${id}, '${name}', '${pizzas}')">
-                                    Modifica
-                                </button>
-
-                                <button class="btn-delete"
-                                    onclick="deleteEntry(${id})">
-                                    Elimina
-                                </button>
-                            </div>
-                        `;
-                    });
-
-                    document.getElementById("results").innerHTML = html;
-                })
-                .catch(err => {
-                    console.error(err);
-                    document.getElementById("results").innerHTML =
-                        "<b>Errore nel caricamento.</b>";
+                            <button class="btn-delete"
+                                onclick="deleteEntry(${row[2]})">
+                                Elimina
+                            </button>
+                        </div>
+                    `;
                 });
-        }
 
+                document.getElementById("results").innerHTML = html;
+            })
+            .catch(() => {
+                document.getElementById("results").innerHTML = "Errore nel caricamento.";
+            });
+    }
 
-        // Carica all'avvio
-        loadEntries();
-
-    </script>
+    loadEntries();
+</script>
 
 </body>
-
 </html>
