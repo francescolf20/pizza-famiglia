@@ -90,10 +90,9 @@ function loadEntries() {
       data.forEach(row => {
         html += `
           <div class="entry">
-            <strong>${row[0]}</strong><br>
-            ${row[1]}<br>
-            <small>${row[2]}</small>
-          </div>
+  <strong>${row[0]}</strong><br>
+  ${row[1]}
+</div>
         `;
       });
       document.getElementById("results").innerHTML = html;
