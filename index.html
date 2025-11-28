@@ -60,60 +60,54 @@
 <div id="results">Caricamento...</div>
 
 <script>
-    // ⚠️ SOSTITUISCI QUESTO URL con il tuo URL della Web App
     const API_URL = "https://script.google.com/macros/s/AKfycbxl4tLSCLEHv4d7rYZNJHb4oi3mOtM0fO9f_6x9T_Ljmpst6Zkz2aXzWqo_I3F8g4PCWw/exec";
 
-    // Funzione di escaping per gestire apici e virgolette
     function esc(str) {
-        // Gestisce i doppi apici e i backslash, essenziale per la sintassi onclick
         return String(str)
-            .replace(/\\/g, "\\\\") 
+            .replace(/\\/g, "\\\\")
+            .replace(/'/g, "\\'")
             .replace(/"/g, '\\"');
     }
 
-    // 📌 INVIO DATI (AGGIUNGI) - Usa JSON
+    // 📌 INVIO DATI — FORMATO COMPATIBILE CON APPS SCRIPT
     document.getElementById("pizzaForm").addEventListener("submit", function (e) {
         e.preventDefault();
 
-        const dataToSend = {
-            action: "add",
-            name: document.getElementById("name").value.trim(),
-            pizzas: document.getElementById("pizzas").value.trim()
-        };
+        const formData = new URLSearchParams();
+        formData.append("action", "add");
+        formData.append("name", document.getElementById("name").value.trim());
+        formData.append("pizzas", document.getElementById("pizzas").value.trim());
 
         fetch(API_URL, {
             method: "POST",
-            mode: "no-cors", 
-            headers: { "Content-Type": "application/json" }, 
-            body: JSON.stringify(dataToSend) 
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString()
         });
 
         alert("Preferenza salvata!");
-        document.getElementById("name").value = "";
-        document.getElementById("pizzas").value = "";
         setTimeout(loadEntries, 700);
     });
 
-    // 🗑 ELIMINA - Usa JSON
+    // 🗑 ELIMINA
     function deleteEntry(id) {
         if (!confirm("Vuoi davvero eliminare questa preferenza?")) return;
 
-        const dataToSend = {
-            action: "delete",
-            id: id
-        };
+        const formData = new URLSearchParams();
+        formData.append("action", "delete");
+        formData.append("id", id);
 
         fetch(API_URL, {
             method: "POST",
-            mode: "no-cors", 
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(dataToSend)
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString()
         });
 
         setTimeout(loadEntries, 700);
     }
 
-    // ✏️ MODIFICA - Usa JSON
+    // ✏️ MODIFICA
     function editEntry(id, oldName, oldPizzas) {
         const newName = prompt("Nuovo nome:", oldName);
         if (!newName) return;
@@ -121,18 +115,17 @@
         const newPizzas = prompt("Nuovi gusti di pizza:", oldPizzas);
         if (!newPizzas) return;
 
-        const dataToSend = {
-            action: "update",
-            id: id,
-            name: newName.trim(),
-            pizzas: newPizzas.trim()
-        };
+        const formData = new URLSearchParams();
+        formData.append("action", "update");
+        formData.append("id", id);
+        formData.append("name", newName.trim());
+        formData.append("pizzas", newPizzas.trim());
 
         fetch(API_URL, {
             method: "POST",
-            mode: "no-cors", 
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(dataToSend)
+            mode: "no-cors",
+            headers: { "Content-Type": "application/x-www-form-urlencoded" },
+            body: formData.toString()
         });
 
         setTimeout(loadEntries, 700);
@@ -140,7 +133,7 @@
 
     // 🔄 CARICA TUTTE LE VOCI
     function loadEntries() {
-        fetch(API_URL) 
+        fetch(API_URL)
             .then(res => res.json())
             .then(data => {
                 let html = "";
@@ -151,8 +144,7 @@
                             ${esc(row[1])}<br><br>
 
                             <button class="btn-edit"
-                                // 👈 CORREZIONE CHIAVE: Uso di doppi apici e funzione esc() per prevenire SyntaxError
-                                onclick="editEntry(${row[2]}, \"${esc(row[0])}\", \"${esc(row[1])}\")">
+                                onclick="editEntry(${row[2]}, '${esc(row[0])}', '${esc(row[1])}')">
                                 Modifica
                             </button>
 
@@ -167,7 +159,7 @@
                 document.getElementById("results").innerHTML = html;
             })
             .catch(() => {
-                document.getElementById("results").innerHTML = "Errore nel caricamento. Assicurati che lo script sia distribuito correttamente.";
+                document.getElementById("results").innerHTML = "Errore nel caricamento.";
             });
     }
 
