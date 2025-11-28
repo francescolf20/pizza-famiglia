@@ -163,10 +163,11 @@ background-size: cover;
             let html = "";
 
             data.forEach(row => {
+                const formattedPizzas = esc(row[1]).replace(/\n/g, '<br>');
                 html += `
                     <div class="entry">
                         <strong>${esc(row[0])}</strong><br>
-                        ${esc(row[1])}<br><br>
+                        ${formattedPizzas}<br><br>
 
                         <button class="btn-edit"
                                 data-id="${row[2]}"
