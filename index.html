@@ -125,11 +125,12 @@
 
             html += `
               <div class="entry">
-                <strong>${name}</strong><br>
-                ${pizzas}<br><br>
-                <button class="btn-edit" onclick="editEntry('${id}', '${name.replace(/'/g, "\\'")}', '${pizzas.replace(/'/g, "\\'")}')">Modifica</button>
-                <button class="btn-delete" onclick="deleteEntry('${id}')">Elimina</button>
-              </div>
+      <strong>${row[0]}</strong><br>
+      ${row[1]}<br>
+
+      <button onclick="editEntry(${row[2]}, '${row[0]}', '${row[1]}')" style="background:#2196F3;color:white;margin-top:5px;">Modifica</button>
+      <button onclick="deleteEntry(${row[2]})" style="background:#F44336;color:white;margin-top:5px;">Elimina</button>
+  </div>
             `;
           });
           document.getElementById("results").innerHTML = html || "Nessuna preferenza inserita.";
